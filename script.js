@@ -1,4 +1,4 @@
-// Configuration - MUST be configured for the app to work
+// Configuration - MUST be configured for the app to wor
 const SUPABASE_CONFIG = {
   url: "https://klxihhmbptpdzbpuyhyw.supabase.co", // REQUIRED: Replace with your actual Supabase URL
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtseGloaG1icHRwZHpicHV5aHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwOTI2NTcsImV4cCI6MjA2NDY2ODY1N30.9XY4gXAA0I8I6z7AM6NdxSvC1E3oSDc4MAoJfuOjUtM", // REQUIRED: Replace with your actual anon public key
