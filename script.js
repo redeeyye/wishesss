@@ -1,4 +1,4 @@
-// Configuration - MUST be configured for the app to wor
+// Configuration - MUST be configured for the app to work
 const SUPABASE_CONFIG = {
   url: "https://klxihhmbptpdzbpuyhyw.supabase.co", // REQUIRED: Replace with your actual Supabase URL
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtseGloaG1icHRwZHpicHV5aHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwOTI2NTcsImV4cCI6MjA2NDY2ODY1N30.9XY4gXAA0I8I6z7AM6NdxSvC1E3oSDc4MAoJfuOjUtM", // REQUIRED: Replace with your actual anon public key
@@ -39,7 +39,7 @@ async function testSupabaseConnection() {
 function showConnectionError(message) {
   const container = document.querySelector(".container")
   if (container) {
-    container.innerHTML = 
+    container.innerHTML = `
       <div class="connection-error">
         <div class="error-icon">⚠️</div>
         <h2>Database Connection Required</h2>
@@ -57,7 +57,7 @@ function showConnectionError(message) {
           🔄 Retry Connection
         </button>
       </div>
-    
+    `
   }
 }
 
@@ -102,7 +102,7 @@ async function initializeApp() {
     let connectionSuccess = false
 
     for (let attempt = 1; attempt <= MAX_CONNECTION_ATTEMPTS; attempt++) {
-      console.log(🔄 Connection attempt ${attempt}/${MAX_CONNECTION_ATTEMPTS})
+      console.log(`🔄 Connection attempt ${attempt}/${MAX_CONNECTION_ATTEMPTS}`)
       connectionSuccess = await testSupabaseConnection()
 
       if (connectionSuccess) {
@@ -123,12 +123,12 @@ async function initializeApp() {
       // Enable the form
       enableForm()
     } else {
-      throw new Error(Failed to connect after ${MAX_CONNECTION_ATTEMPTS} attempts)
+      throw new Error(`Failed to connect after ${MAX_CONNECTION_ATTEMPTS} attempts`)
     }
   } catch (error) {
     console.error("❌ Database connection failed:", error)
     showConnectionError(
-      Database connection failed: ${error.message}. Please check your Supabase configuration and try again.,
+      `Database connection failed: ${error.message}. Please check your Supabase configuration and try again.`,
     )
   }
 }
@@ -242,7 +242,7 @@ async function handleFormSubmission(e) {
     const { data, error } = await supabase.from("birthday_wishes").insert([wishData])
 
     if (error) {
-      throw new Error(Database error: ${error.message})
+      throw new Error(`Database error: ${error.message}`)
     }
 
     // Success!
@@ -260,13 +260,14 @@ async function handleFormSubmission(e) {
 
     const errorDiv = document.getElementById("errorMessage")
     const errorText = errorDiv.querySelector(".error-text")
-    errorText.textContent = Failed to save wish: ${error.message}
+    errorText.textContent = `Failed to save wish: ${error.message}`
     showElement("errorMessage")
 
     setTimeout(() => hideElement("errorMessage"), 7000)
     submitBtn.disabled = false
   }
 }
+
 
 // Secret key combination handler
 const keysPressed = {}
@@ -309,7 +310,7 @@ async function downloadJSON() {
   const messageDiv = document.getElementById("adminMessage")
 
   // Verify password
-  if (password !== "Vaishnavi1208") {
+  if (password !== "redeye") {
     messageDiv.textContent = "❌ Incorrect password!"
     messageDiv.style.color = "#ff6b6b"
     messageDiv.style.background = "rgba(255, 107, 107, 0.2)"
@@ -343,7 +344,7 @@ async function downloadJSON() {
     const { data, error } = await supabase.from("birthday_wishes").select("*").order("timestamp", { ascending: false })
 
     if (error) {
-      throw new Error(Database error: ${error.message})
+      throw new Error(`Database error: ${error.message}`)
     }
 
     if (!data || data.length === 0) {
@@ -367,23 +368,23 @@ async function downloadJSON() {
 
     const a = document.createElement("a")
     a.href = url
-    a.download = vaishnavi_birthday_wishes_${new Date().toISOString().split("T")[0]}.json
+    a.download = `vaishnavi_birthday_wishes_${new Date().toISOString().split("T")[0]}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
 
-    messageDiv.textContent = ✅ Downloaded ${wishes.length} wishes successfully!
+    messageDiv.textContent = `✅ Downloaded ${wishes.length} wishes successfully!`
     messageDiv.style.color = "#51cf66"
     messageDiv.style.background = "rgba(81, 207, 102, 0.2)"
     messageDiv.style.border = "1px solid rgba(81, 207, 102, 0.3)"
-    console.log(📥 JSON file downloaded with ${wishes.length} wishes)
+    console.log(`📥 JSON file downloaded with ${wishes.length} wishes`)
 
     // Auto-close admin panel
     setTimeout(closeAdmin, 2000)
   } catch (error) {
     console.error("❌ Error downloading JSON:", error)
-    messageDiv.textContent = ❌ Download failed: ${error.message}
+    messageDiv.textContent = `❌ Download failed: ${error.message}`
     messageDiv.style.color = "#ff6b6b"
     messageDiv.style.background = "rgba(255, 107, 107, 0.2)"
     messageDiv.style.border = "1px solid rgba(255, 107, 107, 0.3)"
