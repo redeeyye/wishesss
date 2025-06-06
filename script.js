@@ -310,7 +310,7 @@ async function downloadJSON() {
   const messageDiv = document.getElementById("adminMessage")
 
   // Verify password
-  if (password !== "redeye") {
+  if (password !== "Vaishnavi12") {
     messageDiv.textContent = "❌ Incorrect password!"
     messageDiv.style.color = "#ff6b6b"
     messageDiv.style.background = "rgba(255, 107, 107, 0.2)"
