@@ -1,4 +1,4 @@
-// Configuration - MUST be configured for the app to wor
+// Configuration - MUST be configured for the app to work
 const SUPABASE_CONFIG = {
   url: "https://klxihhmbptpdzbpuyhyw.supabase.co", // REQUIRED: Replace with your actual Supabase URL
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtseGloaG1icHRwZHpicHV5aHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwOTI2NTcsImV4cCI6MjA2NDY2ODY1N30.9XY4gXAA0I8I6z7AM6NdxSvC1E3oSDc4MAoJfuOjUtM", // REQUIRED: Replace with your actual anon public key
@@ -244,46 +244,6 @@ async function handleFormSubmission(e) {
     if (error) {
       throw new Error(Database error: ${error.message})
     }
-
-      try {
-    const discordWebhookUrl = "https://discord.com/api/webhooks/1380586399945855088/WHDqoxDeSuRYFJKkbB0ehduSeR-3_PgK4OupMQ1okDWVpXifOJUjQ2rLxMW7wqteF6EM" // 🔁 Replace this
-
-    await fetch(discordWebhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        embeds: [
-          {
-            title: "🎉 New Birthday Wish!",
-            color: 0xffa500, // orange color
-            fields: [
-              {
-                name: "👤 Name",
-                value: wishData.name,
-                inline: true,
-              },
-              {
-                name: "💬 Message",
-                value: wishData.message,
-                inline: false,
-              },
-              {
-                name: "🕒 Timestamp",
-                value: new Date(wishData.timestamp).toLocaleString(),
-                inline: false,
-              },
-            ],
-            footer: {
-              text: "Birthday Wishes Bot 🎂",
-            },
-            timestamp: wishData.timestamp,
-          },
-        ],
-      }),
-    })
-  } 
 
     // Success!
     console.log("✅ Wish saved successfully to database!")
