@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Messages for Vaishnavi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Floating decorative elements -->
+    <div class="stars-container">
+        <div class="star star-1">✦</div>
+        <div class="star star-2">✧</div>
+        <div class="star star-3">✦</div>
+        <div class="star star-4">✧</div>
+        <div class="star star-5">✦</div>
+        <div class="star star-6">✧</div>
+        <div class="star star-7">✦</div>
+        <div class="star star-8">✧</div>
+        <div class="heart heart-1">💖</div>
+        <div class="heart heart-2">🎂</div>
+        <div class="heart heart-3">💖</div>
+    </div>
+
+    <!-- Status indicator -->
+    <div id="statusIndicator" class="status-indicator status-offline">
+        <span class="status-dot"></span>
+        <span class="status-text">Local Mode</span>
+    </div>
+    
+    <!-- Main container -->
+    <div class="container">
+        <!-- Header section -->
+        <div class="header">
+            <div class="party-hat">🎉</div>
+            <h1>Birthday Messages for Vaishnavi</h1>
+            <div class="party-hat">🎉</div>
+        </div>
+        <div class="subtitle">Leave your special birthday wishes! ✨</div>
+        
+        <!-- Main card -->
+        <div class="card">
+            <div class="card-header">
+                <span class="message-icon">💌</span>
+                <h2>Leave Your Message</h2>
+                <span class="heart-icon">💖</span>
+            </div>
+            <div class="card-subtitle">Share your birthday wishes for Vaishnavi! 💕</div>
+            
+            <!-- Form -->
+            <form id="wishForm" class="form">
+                <div class="form-group">
+                    <label for="name">Your Name</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your name...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Birthday Message</label>
+                    <textarea id="message" name="message" required placeholder="Write your birthday wishes here..."></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span class="btn-icon">💖</span>
+                    Send Birthday Wishes
+                </button>
+            </form>
+            
+            <!-- Success message -->
+            <div class="success-message" id="successMessage">
+                <div class="success-icon">🎊</div>
+                <div class="success-text">Your birthday wish has been sent successfully!</div>
+            </div>
+            
+            <!-- Error message -->
+            <div class="error-message" id="errorMessage">
+                <div class="error-icon">💝</div>
+                <div class="error-text">Your wish has been saved locally!</div>
+            </div>
+            
+            <!-- Loading spinner -->
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>Sending your magical wish...</p>
+            </div>
+        </div>
+        
+        <!-- Footer note -->
+        <div class="footer-note">
+            Your message will be saved for Vaishnavi's special day! 💕
+        </div>
+    </div>
+
+    <!-- Credit -->
+    <div class="credit">
+        <span class="credit-icon">✨</span>
+        created by redeye
+    </div>
+
+    <!-- Hidden Admin Panel -->
+    <div class="admin-panel" id="adminPanel">
+        <div class="admin-content">
+            <div class="admin-header">
+                <span class="admin-icon">🔐</span>
+                <h3>Admin Access</h3>
+            </div>
+            <input type="password" id="adminPassword" class="admin-input" placeholder="Enter password...">
+            <div class="admin-buttons">
+                <button class="admin-btn download-btn" onclick="downloadJSON()">
+                    <span>📥</span> Download JSON
+                </button>
+                <button class="admin-btn close-btn" onclick="closeAdmin()">
+                    <span>❌</span> Close
+                </button>
+            </div>
+            <div id="adminMessage" class="admin-message"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
