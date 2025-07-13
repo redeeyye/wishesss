@@ -63,7 +63,7 @@ function showConnectionError(message) {
 
 // Initialize the application - REQUIRES database connection
 async function initializeApp() {
-  console.log("🚀 Initializing Birthday Messages for Anugya...")
+  console.log("🚀 Initializing Birthday Messages for Vaishnavi...")
 
   // Check if Supabase library is loaded
   if (typeof window.supabase === "undefined") {
@@ -310,7 +310,7 @@ async function downloadJSON() {
   const messageDiv = document.getElementById("adminMessage")
 
   // Verify password
-  if (password !== "Anugya12") {
+  if (password !== "Vaishnavi12") {
     messageDiv.textContent = "❌ Incorrect password!"
     messageDiv.style.color = "#ff6b6b"
     messageDiv.style.background = "rgba(255, 107, 107, 0.2)"
@@ -368,7 +368,7 @@ async function downloadJSON() {
 
     const a = document.createElement("a")
     a.href = url
-    a.download = `Anugya_birthday_wishes_${new Date().toISOString().split("T")[0]}.json`
+    a.download = `Vaishnavi_birthday_wishes_${new Date().toISOString().split("T")[0]}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -430,7 +430,7 @@ function preventDevTools() {
   })
 
   // Console messages
-  console.log("%c🎂 Birthday Messages for Anugya", "color: #ff6b9d; font-size: 24px; font-weight: bold;")
+  console.log("%c🎂 Birthday Messages for Vaishnavi", "color: #ff6b9d; font-size: 24px; font-weight: bold;")
   console.log("%c✨ Database-only mode - Crafted by redeye", "color: #c44569; font-size: 14px;")
 }
 
@@ -469,7 +469,7 @@ function setupEventListeners() {
 
 // Initialize application when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🎉 Birthday Messages for Anugya - Database-only mode")
+  console.log("🎉 Birthday Messages for Vaishnavi - Database-only mode")
 
   // Disable form initially
   disableForm()
