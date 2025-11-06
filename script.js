@@ -1,16 +1,13 @@
-// Configuration - MUST be configured for the app to work
 const SUPABASE_CONFIG = {
-  url: "https://klxihhmbptpdzbpuyhyw.supabase.co", // REQUIRED: Replace with your actual Supabase URL
+  url: "https://klxihhmbptpdzbpuyhyw.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtseGloaG1icHRwZHpicHV5aHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwOTI2NTcsImV4cCI6MjA2NDY2ODY1N30.9XY4gXAA0I8I6z7AM6NdxSvC1E3oSDc4MAoJfuOjUtM", // REQUIRED: Replace with your actual anon public key
 }
 
-// Global variables
 let supabase = null
 let isSupabaseConnected = false
 const connectionAttempts = 0
 const MAX_CONNECTION_ATTEMPTS = 3
 
-// Connection testing function
 async function testSupabaseConnection() {
   if (!supabase) {
     console.error("❌ Supabase client not initialized")
@@ -35,7 +32,6 @@ async function testSupabaseConnection() {
   }
 }
 
-// Show connection error screen
 function showConnectionError(message) {
   const container = document.querySelector(".container")
   if (container) {
@@ -61,18 +57,15 @@ function showConnectionError(message) {
   }
 }
 
-// Initialize the application - REQUIRES database connection
 async function initializeApp() {
   console.log("🚀 Initializing Birthday Messages for Vaishnavi...")
 
-  // Check if Supabase library is loaded
   if (typeof window.supabase === "undefined") {
     console.error("❌ Supabase library failed to load")
     showConnectionError("Supabase library could not be loaded. Please check your internet connection.")
     return
   }
 
-  // Check if credentials are configured
   if (
     SUPABASE_CONFIG.url === "https://your-project-ref.supabase.co" ||
     SUPABASE_CONFIG.key === "your-anon-public-key-here" ||
@@ -86,7 +79,6 @@ async function initializeApp() {
     return
   }
 
-  // Validate URL format
   if (!SUPABASE_CONFIG.url.includes(".supabase.co")) {
     console.error("❌ Invalid Supabase URL format")
     showConnectionError("Invalid Supabase URL format. URL should end with '.supabase.co'")
@@ -94,11 +86,9 @@ async function initializeApp() {
   }
 
   try {
-    // Initialize Supabase client
     console.log("🔧 Creating Supabase client...")
     supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
 
-    // Test the connection with retries
     let connectionSuccess = false
 
     for (let attempt = 1; attempt <= MAX_CONNECTION_ATTEMPTS; attempt++) {
@@ -120,7 +110,6 @@ async function initializeApp() {
       updateStatus("online")
       console.log("✅ Successfully connected to Supabase database!")
 
-      // Enable the form
       enableForm()
     } else {
       throw new Error(`Failed to connect after ${MAX_CONNECTION_ATTEMPTS} attempts`)
@@ -133,7 +122,6 @@ async function initializeApp() {
   }
 }
 
-// Enable form functionality
 function enableForm() {
   const form = document.getElementById("wishForm")
   const submitBtn = document.getElementById("submitBtn")
@@ -146,7 +134,6 @@ function enableForm() {
   }
 }
 
-// Disable form functionality
 function disableForm() {
   const form = document.getElementById("wishForm")
   const submitBtn = document.getElementById("submitBtn")
@@ -158,7 +145,6 @@ function disableForm() {
   }
 }
 
-// Update connection status
 function updateStatus(status) {
   const indicator = document.getElementById("statusIndicator")
   const text = indicator.querySelector(".status-text")
@@ -172,7 +158,6 @@ function updateStatus(status) {
   }
 }
 
-// Form validation
 function validateForm(formData) {
   const name = formData.get("name").trim()
   const message = formData.get("message").trim()
@@ -188,7 +173,6 @@ function validateForm(formData) {
   return true
 }
 
-// Show/Hide UI elements
 function showElement(elementId) {
   const element = document.getElementById(elementId)
   if (element) element.style.display = "block"
@@ -205,11 +189,9 @@ function hideAllMessages() {
   hideElement("loading")
 }
 
-// Form submission handler - ONLY works with database
 async function handleFormSubmission(e) {
   e.preventDefault()
 
-  // Check if database is connected
   if (!isSupabaseConnected || !supabase) {
     alert("❌ Database connection required! Please refresh the page and ensure your database is configured.")
     return
@@ -218,17 +200,14 @@ async function handleFormSubmission(e) {
   const form = e.target
   const submitBtn = document.getElementById("submitBtn")
 
-  // Hide all messages and show loading
   hideAllMessages()
   showElement("loading")
   submitBtn.disabled = true
 
   try {
-    // Get and validate form data
     const formData = new FormData(form)
     validateForm(formData)
 
-    // Create wish data
     const wishData = {
       id: String(Date.now()),
       name: formData.get("name").trim(),
@@ -238,21 +217,18 @@ async function handleFormSubmission(e) {
 
     console.log("📤 Saving wish to database...")
 
-    // Save to Supabase database
     const { data, error } = await supabase.from("birthday_wishes").insert([wishData])
 
     if (error) {
       throw new Error(`Database error: ${error.message}`)
     }
 
-    // Success!
     console.log("✅ Wish saved successfully to database!")
     hideElement("loading")
     showElement("successMessage")
     form.reset()
     submitBtn.disabled = false
 
-    // Auto-hide success message
     setTimeout(() => hideElement("successMessage"), 5000)
   } catch (error) {
     console.error("❌ Failed to save wish:", error)
@@ -269,13 +245,11 @@ async function handleFormSubmission(e) {
 }
 
 
-// Secret key combination handler
 const keysPressed = {}
 
 function handleKeyDown(e) {
   keysPressed[e.key] = true
 
-  // Check for secret combination: Ctrl + Shift + A
   if (keysPressed["Control"] && keysPressed["Shift"] && keysPressed["A"]) {
     e.preventDefault()
     openAdminPanel()
@@ -286,7 +260,6 @@ function handleKeyUp(e) {
   delete keysPressed[e.key]
 }
 
-// Admin Panel Functions
 function openAdminPanel() {
   if (!isSupabaseConnected) {
     alert("❌ Database connection required for admin access!")
@@ -308,8 +281,7 @@ function closeAdmin() {
 async function downloadJSON() {
   const password = document.getElementById("adminPassword").value
   const messageDiv = document.getElementById("adminMessage")
-
-  // Verify password
+// not safe but who cares
   if (password !== "Vaishnavi12") {
     messageDiv.textContent = "❌ Incorrect password!"
     messageDiv.style.color = "#ff6b6b"
@@ -321,7 +293,6 @@ async function downloadJSON() {
     return
   }
 
-  // Check database connection
   if (!isSupabaseConnected || !supabase) {
     messageDiv.textContent = "❌ Database connection required!"
     messageDiv.style.color = "#ff6b6b"
@@ -340,7 +311,7 @@ async function downloadJSON() {
     messageDiv.style.padding = "12px"
     messageDiv.style.borderRadius = "8px"
 
-    // Fetch all wishes from Supabase
+ 
     const { data, error } = await supabase.from("birthday_wishes").select("*").order("timestamp", { ascending: false })
 
     if (error) {
@@ -353,7 +324,7 @@ async function downloadJSON() {
       return
     }
 
-    // Transform data to match requested format
+ 
     const wishes = data.map((wish) => ({
       id: String(wish.id),
       name: wish.name,
@@ -361,7 +332,7 @@ async function downloadJSON() {
       timestamp: wish.timestamp,
     }))
 
-    // Create and download JSON file
+ 
     const jsonData = JSON.stringify(wishes, null, 4)
     const blob = new Blob([jsonData], { type: "application/json" })
     const url = URL.createObjectURL(blob)
@@ -380,7 +351,6 @@ async function downloadJSON() {
     messageDiv.style.border = "1px solid rgba(81, 207, 102, 0.3)"
     console.log(`📥 JSON file downloaded with ${wishes.length} wishes`)
 
-    // Auto-close admin panel
     setTimeout(closeAdmin, 2000)
   } catch (error) {
     console.error("❌ Error downloading JSON:", error)
@@ -393,7 +363,6 @@ async function downloadJSON() {
   }
 }
 
-// Load Supabase script dynamically
 function loadSupabase() {
   console.log("📦 Loading Supabase library...")
   const script = document.createElement("script")
@@ -409,12 +378,9 @@ function loadSupabase() {
   document.head.appendChild(script)
 }
 
-// Security measures
 function preventDevTools() {
-  // Prevent right-click context menu
   document.addEventListener("contextmenu", (e) => e.preventDefault())
 
-  // Prevent common developer tool shortcuts
   document.addEventListener("keydown", (e) => {
     if (
       e.key === "F12" ||
@@ -422,31 +388,25 @@ function preventDevTools() {
       (e.ctrlKey && e.shiftKey && e.key === "C") ||
       (e.ctrlKey && e.key === "U")
     ) {
-      // Allow our secret combination
       if (!(e.ctrlKey && e.shiftKey && e.key === "A")) {
         e.preventDefault()
       }
     }
   })
 
-  // Console messages
   console.log("%c🎂 Birthday Messages for Vaishnavi", "color: #ff6b9d; font-size: 24px; font-weight: bold;")
   console.log("%c✨ Database-only mode - Crafted by redeye", "color: #c44569; font-size: 14px;")
 }
 
-// Event Listeners Setup
 function setupEventListeners() {
-  // Form submission
   const wishForm = document.getElementById("wishForm")
   if (wishForm) {
     wishForm.addEventListener("submit", handleFormSubmission)
   }
 
-  // Secret key combination
   document.addEventListener("keydown", handleKeyDown)
   document.addEventListener("keyup", handleKeyUp)
 
-  // Admin password field - allow Enter key
   const adminPassword = document.getElementById("adminPassword")
   if (adminPassword) {
     adminPassword.addEventListener("keypress", (e) => {
@@ -456,7 +416,6 @@ function setupEventListeners() {
     })
   }
 
-  // Close admin panel when clicking outside
   const adminPanel = document.getElementById("adminPanel")
   if (adminPanel) {
     adminPanel.addEventListener("click", (e) => {
@@ -467,28 +426,21 @@ function setupEventListeners() {
   }
 }
 
-// Initialize application when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
   console.log("🎉 Birthday Messages for Vaishnavi - Database-only mode")
 
-  // Disable form initially
   disableForm()
 
-  // Update status to connecting
   updateStatus("connecting")
 
-  // Setup event listeners
   setupEventListeners()
 
-  // Load Supabase and initialize
   loadSupabase()
 
-  // Apply security measures
   preventDevTools()
 
   console.log("🔄 Attempting database connection...")
 })
 
-// Make admin functions globally available
 window.closeAdmin = closeAdmin
 window.downloadJSON = downloadJSON
