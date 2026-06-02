@@ -10,6 +10,7 @@ const port = Number(process.env.PORT || 3000)
 const publicDir = __dirname
 const visitorCookieName = "rashi_wish_visitor"
 const wishesCollectionName = "wishes"
+const defaultDatabaseName = "birthday_wishes"
 const maxRequestsPerWindow = 40
 const rateLimitWindowMs = 60 * 1000
 
@@ -28,32 +29,57 @@ function getRequiredEnv(name) {
   return value
 }
 
-async function getWishesCollection() {
+function getHashSecret() {
+  return process.env.COOKIE_SECRET || getRequiredEnv("MONGODB_URI")
+}
+
+function getMongoUri() {
+  const uri = getRequiredEnv("MONGODB_URI")
+  const parsed = new URL(uri)
+  const hasDatabaseName = parsed.pathname && parsed.pathname !== "/"
+
+  if (hasDatabaseName) {
+    return uri
+  }
+
+  parsed.pathname = `/${defaultDatabaseName}`
+  return parsed.toString()
+}
+
+async function getMongoClient() {
   if (!mongoClient) {
-    mongoClient = new MongoClient(getRequiredEnv("MONGODB_URI"), {
+    mongoClient = new MongoClient(getMongoUri(), {
       serverSelectionTimeoutMS: 10000,
     })
     await mongoClient.connect()
   }
 
-  if (!wishesCollection) {
-    wishesCollection = mongoClient.db().collection(wishesCollectionName)
-  }
+  return mongoClient
+}
 
-  if (!indexesReady) {
-    await wishesCollection.createIndex({ visitorHash: 1 }, {
-      unique: true,
-      partialFilterExpression: { visitorHash: { $type: "string" } },
-    })
-    await wishesCollection.createIndex({ ipHash: 1 }, {
-      unique: true,
-      partialFilterExpression: { ipHash: { $type: "string" } },
-    })
-    await wishesCollection.createIndex({ createdAt: -1 })
-    indexesReady = true
+async function getWishesCollection() {
+  const client = await getMongoClient()
+
+  if (!wishesCollection) {
+    wishesCollection = client.db().collection(wishesCollectionName)
   }
 
   return wishesCollection
+}
+
+async function ensureIndexes(collection) {
+  if (!indexesReady) {
+    await collection.createIndex({ visitorHash: 1 }, {
+      unique: true,
+      partialFilterExpression: { visitorHash: { $type: "string" } },
+    })
+    await collection.createIndex({ ipHash: 1 }, {
+      unique: true,
+      partialFilterExpression: { ipHash: { $type: "string" } },
+    })
+    await collection.createIndex({ createdAt: -1 })
+    indexesReady = true
+  }
 }
 
 function getCookie(req, name) {
@@ -69,7 +95,7 @@ function createVisitorToken() {
 }
 
 function hashValue(label, value) {
-  return crypto.createHmac("sha256", getRequiredEnv("COOKIE_SECRET")).update(`${label}:${value}`).digest("hex")
+  return crypto.createHmac("sha256", getHashSecret()).update(`${label}:${value}`).digest("hex")
 }
 
 function setVisitorCookie(res, token) {
@@ -207,6 +233,7 @@ app.post("/api/wishes", async (req, res) => {
   try {
     const identity = getRequestIdentity(req, res)
     const collection = await getWishesCollection()
+    await ensureIndexes(collection)
     const existingWish = await hasExistingWish(collection, identity)
 
     if (existingWish) {
