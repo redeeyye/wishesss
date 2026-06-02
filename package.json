@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "setup:db": "node setup-mongodb.js",
     "build": "echo 'no build script'"
   },
   "dependencies": {
