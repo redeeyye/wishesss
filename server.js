@@ -29,7 +29,9 @@ function getRequiredEnv(name) {
 
 async function getWishesCollection() {
   if (!mongoClient) {
-    mongoClient = new MongoClient(getRequiredEnv("MONGODB_URI"))
+    mongoClient = new MongoClient(getRequiredEnv("MONGODB_URI"), {
+      serverSelectionTimeoutMS: 10000,
+    })
     await mongoClient.connect()
   }
 
