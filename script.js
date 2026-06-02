@@ -1,124 +1,70 @@
-const SUPABASE_CONFIG = {
-  url: "https://klxihhmbptpdzbpuyhyw.supabase.co",
-  key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtseGloaG1icHRwZHpicHV5aHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwOTI2NTcsImV4cCI6MjA2NDY2ODY1N30.9XY4gXAA0I8I6z7AM6NdxSvC1E3oSDc4MAoJfuOjUtM", // REQUIRED: Replace with your actual anon public key
-}
-
-let supabase = null
-let isSupabaseConnected = false
-const connectionAttempts = 0
-const MAX_CONNECTION_ATTEMPTS = 3
-
-async function testSupabaseConnection() {
-  if (!supabase) {
-    console.error("❌ Supabase client not initialized")
-    return false
-  }
-
-  try {
-    console.log("🔄 Testing Supabase connection...")
-    const { data, error } = await supabase.from("birthday_wishes").select("count").limit(1)
-
-    if (error) {
-      console.error("❌ Database connection failed:", error.message)
-      console.error("Full error details:", error)
-      return false
-    }
-
-    console.log("✅ Database connection successful!")
-    return true
-  } catch (err) {
-    console.error("❌ Connection test failed:", err)
-    return false
-  }
-}
+let isDatabaseConnected = false
+const submittedWishStorageKey = "rashiWishSubmitted"
 
 function showConnectionError(message) {
   const container = document.querySelector(".container")
   if (container) {
     container.innerHTML = `
       <div class="connection-error">
-        <div class="error-icon">⚠️</div>
+        <div class="error-icon">!</div>
         <h2>Database Connection Required</h2>
         <p>${message}</p>
         <div class="error-details">
           <h3>Setup Instructions:</h3>
           <ol>
-            <li>Create a Supabase project at <a href="https://supabase.com" target="_blank">supabase.com</a></li>
-            <li>Run the SQL script to create the birthday_wishes table</li>
-            <li>Get your Project URL and anon key from Settings → API</li>
-            <li>Update SUPABASE_CONFIG in script.js with your credentials</li>
+            <li>Create a MongoDB database locally or with MongoDB Atlas</li>
+            <li>Copy .env.example to .env</li>
+            <li>Add your MongoDB URI and cookie secret to .env</li>
+            <li>Start the app with pnpm start</li>
           </ol>
         </div>
         <button onclick="location.reload()" class="retry-btn">
-          🔄 Retry Connection
+          Retry Connection
         </button>
       </div>
     `
   }
 }
 
+async function requestJSON(url, options = {}) {
+  const response = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+    ...options,
+  })
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    throw new Error(data.error || "Request failed")
+  }
+
+  return data
+}
+
 async function initializeApp() {
-  console.log("🚀 Initializing Birthday Messages for Vaishnavi...")
-
-  if (typeof window.supabase === "undefined") {
-    console.error("❌ Supabase library failed to load")
-    showConnectionError("Supabase library could not be loaded. Please check your internet connection.")
-    return
-  }
-
-  if (
-    SUPABASE_CONFIG.url === "https://your-project-ref.supabase.co" ||
-    SUPABASE_CONFIG.key === "your-anon-public-key-here" ||
-    !SUPABASE_CONFIG.url ||
-    !SUPABASE_CONFIG.key
-  ) {
-    console.error("❌ Supabase credentials not configured")
-    showConnectionError(
-      "Database credentials are not configured. Please update SUPABASE_CONFIG in script.js with your Supabase URL and anon key.",
-    )
-    return
-  }
-
-  if (!SUPABASE_CONFIG.url.includes(".supabase.co")) {
-    console.error("❌ Invalid Supabase URL format")
-    showConnectionError("Invalid Supabase URL format. URL should end with '.supabase.co'")
-    return
-  }
+  console.log("Initializing Birthday Messages for Rashi...")
 
   try {
-    console.log("🔧 Creating Supabase client...")
-    supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
+    const health = await requestJSON("/api/health")
 
-    let connectionSuccess = false
-
-    for (let attempt = 1; attempt <= MAX_CONNECTION_ATTEMPTS; attempt++) {
-      console.log(`🔄 Connection attempt ${attempt}/${MAX_CONNECTION_ATTEMPTS}`)
-      connectionSuccess = await testSupabaseConnection()
-
-      if (connectionSuccess) {
-        break
-      }
-
-      if (attempt < MAX_CONNECTION_ATTEMPTS) {
-        console.log("⏳ Retrying in 2 seconds...")
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-      }
+    if (!health.databaseConnected) {
+      throw new Error(health.error || "Database is not configured")
     }
 
-    if (connectionSuccess) {
-      isSupabaseConnected = true
-      updateStatus("online")
-      console.log("✅ Successfully connected to Supabase database!")
-
-      enableForm()
+    isDatabaseConnected = true
+    updateStatus("online")
+    if (health.hasSubmittedWish || localStorage.getItem(submittedWishStorageKey) === "true") {
+      markWishSubmitted()
     } else {
-      throw new Error(`Failed to connect after ${MAX_CONNECTION_ATTEMPTS} attempts`)
+      enableForm()
     }
+    console.log("Database API is ready")
   } catch (error) {
-    console.error("❌ Database connection failed:", error)
-    showConnectionError(
-      `Database connection failed: ${error.message}. Please check your Supabase configuration and try again.`,
-    )
+    console.error("Database API connection failed:", error)
+    showConnectionError(`Database connection failed: ${error.message}. Please check your server environment.`)
   }
 }
 
@@ -130,8 +76,33 @@ function enableForm() {
     form.style.opacity = "1"
     form.style.pointerEvents = "auto"
     submitBtn.disabled = false
-    console.log("✅ Form enabled - ready to collect wishes!")
   }
+}
+
+function markWishSubmitted(options = {}) {
+  const form = document.getElementById("wishForm")
+  const submitBtn = document.getElementById("submitBtn")
+  const nameInput = document.getElementById("name")
+  const messageInput = document.getElementById("message")
+
+  localStorage.setItem(submittedWishStorageKey, "true")
+
+  if (form && submitBtn) {
+    form.style.opacity = "0.75"
+    form.style.pointerEvents = "none"
+    submitBtn.disabled = true
+    const buttonText = submitBtn.querySelector(".btn-text")
+    if (buttonText) buttonText.textContent = "Wish Sent"
+  }
+
+  if (nameInput) nameInput.disabled = true
+  if (messageInput) messageInput.disabled = true
+
+  if (options.hideMessages !== false) {
+    hideAllMessages()
+  }
+
+  showElement("alreadySubmittedMessage")
 }
 
 function disableForm() {
@@ -170,7 +141,7 @@ function validateForm(formData) {
     throw new Error("Please write a meaningful message (at least 5 characters)")
   }
 
-  return true
+  return { name, message }
 }
 
 function showElement(elementId) {
@@ -186,14 +157,15 @@ function hideElement(elementId) {
 function hideAllMessages() {
   hideElement("successMessage")
   hideElement("errorMessage")
+  hideElement("alreadySubmittedMessage")
   hideElement("loading")
 }
 
 async function handleFormSubmission(e) {
   e.preventDefault()
 
-  if (!isSupabaseConnected || !supabase) {
-    alert("❌ Database connection required! Please refresh the page and ensure your database is configured.")
+  if (!isDatabaseConnected) {
+    alert("Database connection required. Please refresh the page and ensure your server is configured.")
     return
   }
 
@@ -205,197 +177,49 @@ async function handleFormSubmission(e) {
   submitBtn.disabled = true
 
   try {
-    const formData = new FormData(form)
-    validateForm(formData)
-
-    const wishData = {
-      id: String(Date.now()),
-      name: formData.get("name").trim(),
-      message: formData.get("message").trim(),
-      timestamp: new Date().toISOString(),
+    if (localStorage.getItem(submittedWishStorageKey) === "true") {
+      markWishSubmitted()
+      return
     }
 
-    console.log("📤 Saving wish to database...")
+    const payload = validateForm(new FormData(form))
 
-    const { data, error } = await supabase.from("birthday_wishes").insert([wishData])
+    await requestJSON("/api/wishes", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })
 
-    if (error) {
-      throw new Error(`Database error: ${error.message}`)
-    }
-
-    console.log("✅ Wish saved successfully to database!")
     hideElement("loading")
     showElement("successMessage")
     form.reset()
-    submitBtn.disabled = false
+    markWishSubmitted({ hideMessages: false })
 
     setTimeout(() => hideElement("successMessage"), 5000)
   } catch (error) {
-    console.error("❌ Failed to save wish:", error)
+    console.error("Failed to save wish:", error)
     hideElement("loading")
 
     const errorDiv = document.getElementById("errorMessage")
     const errorText = errorDiv.querySelector(".error-text")
+    if (error.message.includes("already sent")) {
+      markWishSubmitted()
+      return
+    }
+
     errorText.textContent = `Failed to save wish: ${error.message}`
     showElement("errorMessage")
 
     setTimeout(() => hideElement("errorMessage"), 7000)
-    submitBtn.disabled = false
-  }
-}
-
-
-const keysPressed = {}
-
-function handleKeyDown(e) {
-  keysPressed[e.key] = true
-
-  if (keysPressed["Control"] && keysPressed["Shift"] && keysPressed["A"]) {
-    e.preventDefault()
-    openAdminPanel()
-  }
-}
-
-function handleKeyUp(e) {
-  delete keysPressed[e.key]
-}
-
-function openAdminPanel() {
-  if (!isSupabaseConnected) {
-    alert("❌ Database connection required for admin access!")
-    return
-  }
-
-  document.getElementById("adminPanel").style.display = "flex"
-  document.getElementById("adminPassword").focus()
-  console.log("🔐 Admin panel opened")
-}
-
-function closeAdmin() {
-  document.getElementById("adminPanel").style.display = "none"
-  document.getElementById("adminPassword").value = ""
-  document.getElementById("adminMessage").textContent = ""
-  console.log("🔐 Admin panel closed")
-}
-
-async function downloadJSON() {
-  const password = document.getElementById("adminPassword").value
-  const messageDiv = document.getElementById("adminMessage")
-// not safe but who cares
-  if (password !== "Vaishnavi12") {
-    messageDiv.textContent = "❌ Incorrect password!"
-    messageDiv.style.color = "#ff6b6b"
-    messageDiv.style.background = "rgba(255, 107, 107, 0.2)"
-    messageDiv.style.border = "1px solid rgba(255, 107, 107, 0.3)"
-    messageDiv.style.padding = "12px"
-    messageDiv.style.borderRadius = "8px"
-    console.log("🔐 Invalid password attempt")
-    return
-  }
-
-  if (!isSupabaseConnected || !supabase) {
-    messageDiv.textContent = "❌ Database connection required!"
-    messageDiv.style.color = "#ff6b6b"
-    messageDiv.style.background = "rgba(255, 107, 107, 0.2)"
-    messageDiv.style.border = "1px solid rgba(255, 107, 107, 0.3)"
-    messageDiv.style.padding = "12px"
-    messageDiv.style.borderRadius = "8px"
-    return
-  }
-
-  try {
-    messageDiv.textContent = "⏳ Downloading wishes from database..."
-    messageDiv.style.color = "#4299e1"
-    messageDiv.style.background = "rgba(66, 153, 225, 0.2)"
-    messageDiv.style.border = "1px solid rgba(66, 153, 225, 0.3)"
-    messageDiv.style.padding = "12px"
-    messageDiv.style.borderRadius = "8px"
-
- 
-    const { data, error } = await supabase.from("birthday_wishes").select("*").order("timestamp", { ascending: false })
-
-    if (error) {
-      throw new Error(`Database error: ${error.message}`)
+  } finally {
+    if (localStorage.getItem(submittedWishStorageKey) !== "true") {
+      submitBtn.disabled = false
     }
-
-    if (!data || data.length === 0) {
-      messageDiv.textContent = "📭 No wishes found in database"
-      messageDiv.style.color = "#ffa500"
-      return
-    }
-
- 
-    const wishes = data.map((wish) => ({
-      id: String(wish.id),
-      name: wish.name,
-      message: wish.message,
-      timestamp: wish.timestamp,
-    }))
-
- 
-    const jsonData = JSON.stringify(wishes, null, 4)
-    const blob = new Blob([jsonData], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `Vaishnavi_birthday_wishes_${new Date().toISOString().split("T")[0]}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-
-    messageDiv.textContent = `✅ Downloaded ${wishes.length} wishes successfully!`
-    messageDiv.style.color = "#51cf66"
-    messageDiv.style.background = "rgba(81, 207, 102, 0.2)"
-    messageDiv.style.border = "1px solid rgba(81, 207, 102, 0.3)"
-    console.log(`📥 JSON file downloaded with ${wishes.length} wishes`)
-
-    setTimeout(closeAdmin, 2000)
-  } catch (error) {
-    console.error("❌ Error downloading JSON:", error)
-    messageDiv.textContent = `❌ Download failed: ${error.message}`
-    messageDiv.style.color = "#ff6b6b"
-    messageDiv.style.background = "rgba(255, 107, 107, 0.2)"
-    messageDiv.style.border = "1px solid rgba(255, 107, 107, 0.3)"
-    messageDiv.style.padding = "12px"
-    messageDiv.style.borderRadius = "8px"
   }
 }
 
-function loadSupabase() {
-  console.log("📦 Loading Supabase library...")
-  const script = document.createElement("script")
-  script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-  script.onload = () => {
-    console.log("✅ Supabase library loaded successfully")
-    initializeApp()
-  }
-  script.onerror = () => {
-    console.error("❌ Failed to load Supabase library")
-    showConnectionError("Failed to load Supabase library. Please check your internet connection and try again.")
-  }
-  document.head.appendChild(script)
-}
-
-function preventDevTools() {
-  document.addEventListener("contextmenu", (e) => e.preventDefault())
-
-  document.addEventListener("keydown", (e) => {
-    if (
-      e.key === "F12" ||
-      (e.ctrlKey && e.shiftKey && e.key === "I") ||
-      (e.ctrlKey && e.shiftKey && e.key === "C") ||
-      (e.ctrlKey && e.key === "U")
-    ) {
-      if (!(e.ctrlKey && e.shiftKey && e.key === "A")) {
-        e.preventDefault()
-      }
-    }
-  })
-
-  console.log("%c🎂 Birthday Messages for Vaishnavi", "color: #ff6b9d; font-size: 24px; font-weight: bold;")
-  console.log("%c✨ Database-only mode - Crafted by redeye", "color: #c44569; font-size: 14px;")
+function logAppReady() {
+  console.log("%cBirthday Messages for Rashi", "color: #ff6b9d; font-size: 24px; font-weight: bold;")
+  console.log("%cDatabase access is handled by the server API.", "color: #c44569; font-size: 14px;")
 }
 
 function setupEventListeners() {
@@ -403,44 +227,12 @@ function setupEventListeners() {
   if (wishForm) {
     wishForm.addEventListener("submit", handleFormSubmission)
   }
-
-  document.addEventListener("keydown", handleKeyDown)
-  document.addEventListener("keyup", handleKeyUp)
-
-  const adminPassword = document.getElementById("adminPassword")
-  if (adminPassword) {
-    adminPassword.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        downloadJSON()
-      }
-    })
-  }
-
-  const adminPanel = document.getElementById("adminPanel")
-  if (adminPanel) {
-    adminPanel.addEventListener("click", (e) => {
-      if (e.target === adminPanel) {
-        closeAdmin()
-      }
-    })
-  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🎉 Birthday Messages for Vaishnavi - Database-only mode")
-
   disableForm()
-
   updateStatus("connecting")
-
   setupEventListeners()
-
-  loadSupabase()
-
-  preventDevTools()
-
-  console.log("🔄 Attempting database connection...")
+  initializeApp()
+  logAppReady()
 })
-
-window.closeAdmin = closeAdmin
-window.downloadJSON = downloadJSON
