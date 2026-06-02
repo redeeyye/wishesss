@@ -9,6 +9,7 @@ const app = express()
 const port = Number(process.env.PORT || 3000)
 const publicDir = __dirname
 const visitorCookieName = "rashi_wish_visitor"
+const wishesCollectionName = "wishes"
 const maxRequestsPerWindow = 40
 const rateLimitWindowMs = 60 * 1000
 
@@ -36,8 +37,7 @@ async function getWishesCollection() {
   }
 
   if (!wishesCollection) {
-    const db = mongoClient.db(process.env.MONGODB_DB || "birthday_wishes")
-    wishesCollection = db.collection(process.env.MONGODB_COLLECTION || "wishes")
+    wishesCollection = mongoClient.db().collection(wishesCollectionName)
   }
 
   if (!indexesReady) {
