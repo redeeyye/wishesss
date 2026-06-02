@@ -6,7 +6,7 @@ const { MongoClient } = require("mongodb")
 const path = require("path")
 
 const app = express()
-const port = Number(process.env.PORT || 3000)
+const localPort = 3000
 const publicDir = __dirname
 const visitorCookieName = "rashi_wish_visitor"
 const wishesCollectionName = "wishes"
@@ -267,8 +267,8 @@ app.get("*", (req, res) => {
 })
 
 if (require.main === module) {
-  app.listen(port, () => {
-    console.log(`Birthday wishes app listening on http://localhost:${port}`)
+  app.listen(localPort, () => {
+    console.log(`Birthday wishes app listening on http://localhost:${localPort}`)
   })
 }
 
